@@ -1,0 +1,18 @@
+Censo[Tipo]:
+
+*
+
+# Titulo 50-caracteres
+# Descripcion 100-caracteres
+
+# Tipos de commits:
+
+# feat (Características nuevas añadidas al código)
+# fix (Corrección de bugs)
+# chore (No hay cambios en el código)
+# docs (Documentación)
+# style (Cambios de estilo o formateo del código)
+# refactor (Refactorización de código)
+# test (Todo lo relacionado con pruebas)
+
+# Para cerrar issue desde commit utilizar: closes #id_issue / fixes #id_issue
