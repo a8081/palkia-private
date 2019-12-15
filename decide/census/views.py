@@ -9,13 +9,14 @@ from rest_framework.status import (
         HTTP_401_UNAUTHORIZED as ST_401,
         HTTP_409_CONFLICT as ST_409
 )
-
+from django.views import generic
 from base.perms import UserIsStaff
 from .models import Census
-
+from .serializers import CensusSerializer
 
 class CensusCreate(generics.ListCreateAPIView):
-    permission_classes = (UserIsStaff,)
+    permission_classes = ()
+    serializer_class = CensusSerializer
 
     def create(self, request, *args, **kwargs):
         voting_id = request.data.get('voting_id')
@@ -49,3 +50,29 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
         except ObjectDoesNotExist:
             return Response('Invalid voter', status=ST_401)
         return Response('Valid voter')
+
+class CensusList(generic.ListView):
+    model = Census
+    context_object_name = 'census_list'   # your own name for the list as a template variable
+    #queryset = Census.objects.filter(title__icontains='war')[:5] # Get 5 books containing the title war
+    template_name = 'census-list.html'  # Specify your own template name/location
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(CensusList, self).get_context_data(**kwargs)
+        # Get the blog from id and add it to the context
+        census = Census.objects.all()
+        census_list = []
+        voter_list = []
+        print ('censoos' + str(census))
+        for i in [0, census.count()-1]:
+            
+            votacion = census[i].voting_id
+            voters = Census.objects.filter(voting_id=votacion).values_list('voter_id', flat=True) 
+            voter_list.append(voters)
+            cuenta = voters.count()
+            print(voters[0])
+            census_list.append([census[i], voters, cuenta])
+            print(census_list)
+        context['voter_list'] = voter_list
+        context['census_list'] = census_list
+        return context
