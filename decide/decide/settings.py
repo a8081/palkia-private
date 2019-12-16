@@ -25,7 +25,7 @@ SECRET_KEY = '^##ydkswfu0+=ofw0l#$kv^8n)0$i(qd&d&ol#p9!b$8*5%j1+'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -43,15 +43,38 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_swagger',
-    'gateway',
+
+    #Required by the django-rest-auth package
+    'rest_auth',
+    'rest_auth.registration',
+
+    #Required by the allauth package
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',
+
+    #Required for authentication with google
+    'allauth.socialaccount.providers.google',
+
+    #Required for authentication with twitter
+    'allauth.socialaccount.providers.twitter',
+
+    #Required for reCaptcha
+    'captcha'
 ]
+
+SITE_ID = 1
+
+LOGIN_URL_REDIRECT = '/'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
-    ),
-    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.QueryParameterVersioning'
+        'rest_framework.authentication.SessionAuthentication',
+    )
 }
 
 AUTHENTICATION_BACKENDS = [
@@ -70,9 +93,13 @@ MODULES = [
     'voting',
 ]
 
-BASEURL = 'http://localhost:8000'
+BASEURL = 'https://locaste-decide.herokuapp.com'
+
+APIS = {}
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -83,11 +110,28 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'decide.urls'
+CORS_ORIGIN_ALLOW_ALL = True
+
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend'
+)
+
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend'
+)
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR,"templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -108,12 +152,8 @@ WSGI_APPLICATION = 'decide.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'decide',
-        'USER': 'decide',
-        'PASSWORD': 'decide',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -151,32 +191,45 @@ USE_L10N = True
 USE_TZ = True
 
 
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
 
+STATICFILES_DIRS = [ os.path.join(BASE_DIR,"static")]
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256
-
-# Versioning
-ALLOWED_VERSIONS = ['v1', 'v2']
-DEFAULT_VERSION = 'v1'
 
 try:
     from local_settings import *
 except ImportError:
     print("local_settings.py not found")
 
-# loading jsonnet config
-if os.path.exists("config.jsonnet"):
-    import json
-    from _jsonnet import evaluate_file
-    config = json.loads(evaluate_file("config.jsonnet"))
-    for k, v in config.items():
-        vars()[k] = v
 
+import django_heroku
+django_heroku.settings(locals())
 
 INSTALLED_APPS = INSTALLED_APPS + MODULES
+
+
+LOGIN_REDIRECT_URL = '/'
+
+
+#Overrides rest-auth register serializer
+REST_AUTH_REGISTER_SERIALIZERS = {
+    'REGISTER_SERIALIZER': 'authentication.serializers.UserSignupSerializer'
+ }
+
+ACCOUNT_LOGOUT_ON_GET = True
+
+RECAPTCHA_PUBLIC_KEY = '6Lc6h4UUAAAAAKV3jjkEn0W3I_o_wprhVOUzXI9p'
+RECAPTCHA_PRIVATE_KEY = '6Lc6h4UUAAAAAPtcxLE0pQiDjdtVfGM024PJAKpV'
+NOCAPTCHA = True
+DATE_INPUT_FORMATS = ['%d/%m/%Y']
+GOOGLE_RECAPTCHA_SECRET_KEY = '6LdmCYkUAAAAAOGBm-GHWdhKiI1B35LY_7tdoBPo'
+
+# Set to False to run Selenium tests
+ENABLE_CAPTCHA = True
+
+
+ACCOUNT_LOGOUT_ON_GET = True
