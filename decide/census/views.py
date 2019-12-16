@@ -1,4 +1,6 @@
 from django.db.utils import IntegrityError
+from django.http import HttpResponse
+from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
 from rest_framework.response import Response
@@ -11,7 +13,9 @@ from rest_framework.status import (
 )
 
 from base.perms import UserIsStaff
-from .models import Census
+from census.models import Census
+from django.contrib.auth.models import User
+from voting.models import Voting
 
 
 class CensusCreate(generics.ListCreateAPIView):
@@ -49,3 +53,22 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
         except ObjectDoesNotExist:
             return Response('Invalid voter', status=ST_401)
         return Response('Valid voter')
+
+
+def listaVotantes(request, voting_id):
+    voting_id = request.GET.get('voting_id')
+    voters = Census.objects.filter(voting_id=voting_id).values_list('voter_id', flat=True)
+    voters = list(Census.objects.all())
+    response = serializers.serialize('json', voters, fields=("voting_id", "voter_id"))
+    return HttpResponse(response)
+
+def listaCensos(request):
+    census = list(Census.objects.all())
+    datos = []
+    for c in census:
+        user = User.objects.filter(pk=c.voter_id)
+        votacion = Voting.objects.filter(pk=c.voting_id)
+        tupla = (user, votacion)
+        datos.append(tupla)
+    #response = serializers.serialize('json', datos, fields=("voting_id", "voter_id"))
+    return HttpResponse(datos)
