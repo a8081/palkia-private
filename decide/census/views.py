@@ -1,5 +1,7 @@
 from django.db.utils import IntegrityError
 from django.http import HttpResponse
+from django.shortcuts import render
+from django.conf import settings
 from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
@@ -16,6 +18,7 @@ from base.perms import UserIsStaff
 from census.models import Census
 from django.contrib.auth.models import User
 from voting.models import Voting
+
 
 
 class CensusCreate(generics.ListCreateAPIView):
@@ -56,19 +59,22 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
 
 
 def listaVotantes(request, voting_id):
-    voting_id = request.GET.get('voting_id')
-    voters = Census.objects.filter(voting_id=voting_id).values_list('voter_id', flat=True)
-    voters = list(Census.objects.all())
-    response = serializers.serialize('json', voters, fields=("voting_id", "voter_id"))
-    return HttpResponse(response)
+    census = list(Census.objects.filter(voting_id=voting_id))
+    datos = []
+    for c in census:
+        user = list(User.objects.filter(pk=c.voter_id))[0]
+        votacion = list(Voting.objects.filter(pk=c.voting_id))[0]
+        tupla = (user, votacion)
+        datos.append(tupla)
+    return render(request, 'tabla.html', {'datos':datos, 'STATIC_URL':settings.STATIC_URL})
+    
 
 def listaCensos(request):
     census = list(Census.objects.all())
     datos = []
     for c in census:
-        user = User.objects.filter(pk=c.voter_id)
-        votacion = Voting.objects.filter(pk=c.voting_id)
+        user = list(User.objects.filter(pk=c.voter_id))[0]
+        votacion = list(Voting.objects.filter(pk=c.voting_id))[0]
         tupla = (user, votacion)
         datos.append(tupla)
-    #response = serializers.serialize('json', datos, fields=("voting_id", "voter_id"))
-    return HttpResponse(datos)
+    return render(request, 'tabla.html', {'datos':datos, 'STATIC_URL':settings.STATIC_URL})
