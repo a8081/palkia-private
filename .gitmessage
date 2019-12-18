@@ -1,4 +1,4 @@
-Censo[Tipo]:
+Census[Tipo]:
 
 *
 
@@ -15,4 +15,5 @@ Censo[Tipo]:
 # refactor (Refactorización de código)
 # test (Todo lo relacionado con pruebas)
 
-# Para cerrar issue desde commit utilizar: closes #id_issue / fixes #id_issue
+# Modulo: Auth, Census, Booth, Postproc, Visual, Mixnet, Voting
+
